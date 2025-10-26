@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulasi Paging</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Simulasi Manajemen Memori: Non-Contiguous (Paging)</h1>
+
+    <div id="custom-notification" style="display: none;">
+      <p id="notification-message"></p>
+      <button onclick="hideNotification()">OK</button>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 20px">
+      <a
+        href="contiguous.html"
+        style="
+          padding: 10px 20px;
+          background-color: #2ecc71;
+          color: white;
+          text-decoration: none;
+          border-radius: 5px;
+        "
+      >
+        ➡️ Beralih ke Simulasi Contiguous
+      </a>
+    </div>
+
+    <div id="container">
+      <section id="control-panel">
+        <h2>⚙️ Kontrol Simulasi</h2>
+        <div id="process-input">
+          <label for="process-size">Ukuran Proses (KB):</label>
+          <input type="number" id="process-size" min="1" value="20" />
+          <button onclick="addProcess()">Tambah Proses Baru</button>
+        </div>
+
+        <div id="address-translation">
+          <h3>Translasi Alamat</h3>
+          <label for="translate-process-id">Proses ID:</label>
+          <select id="translate-process-id"></select>
+          <label for="logical-address">Alamat Logis (Bytes):</label>
+          <input type="number" id="logical-address" min="0" />
+          <button onclick="translateAddress()">Translasi</button>
+          <p id="translation-result"></p>
+        </div>
+      </section>
+
+      <section id="memory-visualization">
+        <h2>💾 Memori Fisik (256KB, Frame 4KB)</h2>
+        <div id="memory-grid"></div>
+        <p id="fragmentation-info"></p>
+      </section>
+
+      <section id="detail-info">
+        <h2>📋 Detail Proses & Tabel Halaman</h2>
+        <div id="process-list"></div>
+        <h3>Tabel Halaman (Page Table)</h3>
+        <table id="page-table">
+          <thead>
+            <tr>
+              <th>Page ID</th>
+              <th>Frame ID</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+
+    <script src="noncontiguous.js"></script>
+  </body>
+</html>

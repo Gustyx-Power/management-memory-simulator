@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Memori Contiguous</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <h1>Simulasi Manajemen Memori: Contiguous (First-Fit)</h1>
+
+    <div id="custom-notification" style="display: none;">
+      <p id="notification-message"></p>
+      <button onclick="hideNotification()">OK</button>
+    </div>
+    
+    <div style="text-align: center; margin-bottom: 20px;">
+        <a href="noncontiguous.html" style="padding: 10px 20px; background-color: #f39c12; color: white; text-decoration: none; border-radius: 5px;">
+            ⬅️ Beralih ke Simulasi Paging (Non-Contiguous)
+        </a>
+    </div>
+
+    <div id="container">
+        <section id="control-panel">
+            <h2>⚙️ Kontrol Simulasi</h2>
+            <div id="process-input">
+                <label for="process-size">Ukuran Proses (KB):</label>
+                <input type="number" id="process-size" min="1" value="20">
+                <button onclick="addProcess()">Tambah Proses Baru</button>
+            </div>
+            
+            </section>
+
+        <section id="memory-visualization">
+            <h2>💾 Memori Fisik (1024KB Partisi Statis)</h2>
+            <div id="memory-list">
+                </div>
+            <p id="fragmentation-info"></p>
+        </section>
+
+        <section id="detail-info">
+            <h2>📋 Detail Proses</h2>
+            <div id="process-list">
+                </div>
+        </section>
+    </div>
+
+    <script src="contiguous.js"></script> </body>
+</html>

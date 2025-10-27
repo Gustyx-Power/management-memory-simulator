@@ -1,77 +1,473 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simulasi Paging</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <h1>Simulasi Manajemen Memori: Non-Contiguous (Paging)</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Non-Contiguous Memory Allocation | Memory Management Simulator</title>
 
-    <div id="custom-notification" style="display: none;">
-      <p id="notification-message"></p>
-      <button onclick="hideNotification()">OK</button>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3498db',
+                        secondary: '#2ecc71',
+                        danger: '#e74c3c',
+                        warning: '#f1c40f',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Grid cell styles - 8x8 grid */
+        .grid-cell {
+            aspect-ratio: 1;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .grid-cell::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .grid-cell:hover::after {
+            opacity: 1;
+        }
+
+        /* 8 columns grid */
+        .memory-grid-8 {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 min-h-screen">
+
+<!-- Navbar -->
+<nav class="bg-gradient-to-r from-slate-800 to-green-900 text-white shadow-2xl sticky top-0 z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <!-- Back Button -->
+            <a href="index.html" class="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-white/20 transition group">
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+
+            <!-- Title -->
+            <div class="text-center">
+                <h1 class="text-xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
+                    Non-Contiguous Memory Allocation
+                </h1>
+                <p class="text-xs text-green-200">Paging Mechanism</p>
+            </div>
+
+            <!-- Switch Button -->
+            <a href="contiguous.html" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg hover:from-blue-600 hover:to-cyan-600 transition group">
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                <span class="font-medium text-sm">Contiguous</span>
+            </a>
+        </div>
     </div>
+</nav>
 
-    <div style="text-align: center; margin-bottom: 20px">
-      <a
-        href="contiguous.html"
-        style="
-          padding: 10px 20px;
-          background-color: #2ecc71;
-          color: white;
-          text-decoration: none;
-          border-radius: 5px;
-        "
-      >
-        ➡️ Beralih ke Simulasi Contiguous
-      </a>
+<!-- Custom Notification Modal -->
+<div id="custom-notification" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+        <div class="flex items-start gap-4 mb-4">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-info-circle text-green-500 text-xl"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Notifikasi</h3>
+                <p id="notification-message" class="text-gray-600"></p>
+            </div>
+        </div>
+        <button onclick="hideNotification()" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition">
+            <i class="fas fa-check mr-2"></i>OK
+        </button>
     </div>
+</div>
 
-    <div id="container">
-      <section id="control-panel">
-        <h2>⚙️ Kontrol Simulasi</h2>
-        <div id="process-input">
-          <label for="process-size">Ukuran Proses (KB):</label>
-          <input type="number" id="process-size" min="1" value="20" />
-          <button onclick="addProcess()">Tambah Proses Baru</button>
+<!-- Auto Test Modal -->
+<div id="auto-test-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-green-900 rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-scale-in border border-white/20">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-flask text-white text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Test Otomatis</h3>
+            <p class="text-green-200 text-sm">Pilih scenario paging yang ingin Anda test</p>
         </div>
 
-        <div id="address-translation">
-          <h3>Translasi Alamat</h3>
-          <label for="translate-process-id">Proses ID:</label>
-          <select id="translate-process-id"></select>
-          <label for="logical-address">Alamat Logis (Bytes):</label>
-          <input type="number" id="logical-address" min="0" />
-          <button onclick="translateAddress()">Translasi</button>
-          <p id="translation-result"></p>
+        <div class="space-y-3 mb-6">
+            <!-- Sequential Allocation -->
+            <button onclick="runAutoTest('sequential')" class="w-full p-5 glass rounded-xl hover:bg-white/20 transition text-left group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/30 transition">
+                        <i class="fas fa-list-ol text-green-400 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold mb-1">Sequential Pages</h4>
+                        <p class="text-green-200 text-xs">Pages dialokasikan secara berurutan</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-white/50 group-hover:text-white group-hover:translate-x-1 transition"></i>
+                </div>
+            </button>
+
+            <!-- Scattered Allocation -->
+            <button onclick="runAutoTest('scattered')" class="w-full p-5 glass rounded-xl hover:bg-white/20 transition text-left group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-500/30 transition">
+                        <i class="fas fa-random text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold mb-1">Scattered Pages</h4>
+                        <p class="text-green-200 text-xs">Pages tersebar di berbagai frame</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-white/50 group-hover:text-white group-hover:translate-x-1 transition"></i>
+                </div>
+            </button>
         </div>
-      </section>
 
-      <section id="memory-visualization">
-        <h2>💾 Memori Fisik (256KB, Frame 4KB)</h2>
-        <div id="memory-grid"></div>
-        <p id="fragmentation-info"></p>
-      </section>
+        <button onclick="closeAutoTestModal()" class="w-full py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition">
+            <i class="fas fa-times mr-2"></i>Batal
+        </button>
+    </div>
+</div>
 
-      <section id="detail-info">
-        <h2>📋 Detail Proses & Tabel Halaman</h2>
-        <div id="process-list"></div>
-        <h3>Tabel Halaman (Page Table)</h3>
-        <table id="page-table">
-          <thead>
-            <tr>
-              <th>Page ID</th>
-              <th>Frame ID</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Header Info -->
+    <div class="glass rounded-2xl p-6 mb-8 text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-th text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold">Simulasi Non-Contiguous Allocation (Paging)</h2>
+                    <p class="text-green-200 text-sm">Pages dapat tersebar di berbagai frames (256 KB Total Memory)</p>
+                </div>
+            </div>
+            <!-- Auto Test Button -->
+            <button onclick="openAutoTestModal()" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 transition shadow-lg flex items-center gap-2">
+                <i class="fas fa-flask"></i>
+                <span>Test Otomatis</span>
+            </button>
+        </div>
+
+        <!-- Info badges -->
+        <div class="flex flex-wrap gap-3">
+            <div class="px-4 py-2 bg-white/10 rounded-lg text-sm flex items-center gap-2">
+                <i class="fas fa-microchip text-green-300"></i>
+                <span>Total: 256 KB</span>
+            </div>
+            <div class="px-4 py-2 bg-white/10 rounded-lg text-sm flex items-center gap-2">
+                <i class="fas fa-file text-cyan-300"></i>
+                <span>Page Size: 4 KB</span>
+            </div>
+            <div class="px-4 py-2 bg-white/10 rounded-lg text-sm flex items-center gap-2">
+                <i class="fas fa-th-large text-yellow-300"></i>
+                <span>Total Frames: 64</span>
+            </div>
+        </div>
     </div>
 
-    <script src="js/noncontiguous.js"></script>
-  </body>
+    <!-- Grid Layout -->
+    <div class="grid lg:grid-cols-12 gap-8">
+
+        <!-- Control Panel (Left Sidebar) -->
+        <aside class="lg:col-span-3">
+            <div class="glass rounded-2xl p-6 sticky top-24 space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <i class="fas fa-cog text-green-300"></i>
+                        Kontrol Simulasi
+                    </h3>
+
+                    <!-- Process Input Form -->
+                    <div class="space-y-4">
+                        <div>
+                            <label for="process-size" class="block text-sm font-medium text-green-200 mb-2">
+                                <i class="fas fa-memory mr-1"></i>
+                                Ukuran Proses (KB)
+                            </label>
+                            <input
+                                    type="number"
+                                    id="process-size"
+                                    min="1"
+                                    value="20"
+                                    class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+                                    placeholder="Masukkan ukuran..."
+                            >
+                        </div>
+
+                        <button
+                                onclick="addProcess()"
+                                class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-600 transition shadow-lg hover:shadow-green-500/50 flex items-center justify-center gap-2"
+                        >
+                            <i class="fas fa-plus-circle"></i>
+                            Tambah Proses
+                        </button>
+
+                        <button
+                                onclick="resetMemory()"
+                                class="w-full py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition flex items-center justify-center gap-2"
+                        >
+                            <i class="fas fa-redo"></i>
+                            Reset Memory
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Address Translation -->
+                <div class="pt-6 border-t border-white/20">
+                    <h4 class="text-sm font-semibold text-green-200 mb-3 flex items-center gap-2">
+                        <i class="fas fa-exchange-alt"></i>
+                        Translasi Alamat
+                    </h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-green-200 mb-1">Process ID:</label>
+                            <select id="translate-process-id" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <option value="">Pilih Proses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-green-200 mb-1">Logical Address (Bytes):</label>
+                            <input type="number" id="logical-address" min="0" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                        </div>
+                        <button onclick="translateAddress()" class="w-full py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition">
+                            <i class="fas fa-calculator mr-1"></i>
+                            Translasi
+                        </button>
+                        <div id="translation-result" class="text-xs text-green-200 bg-white/5 p-3 rounded-lg border border-white/10 min-h-[60px]">
+                            <p class="text-white/50 text-center">Hasil translasi akan muncul di sini</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="pt-6 border-t border-white/20">
+                    <h4 class="text-sm font-semibold text-green-200 mb-3">Quick Stats</h4>
+                    <div class="space-y-2 text-sm text-white/70">
+                        <div class="flex justify-between">
+                            <span>Total Proses:</span>
+                            <span id="total-processes" class="font-semibold text-white">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Frames Used:</span>
+                            <span id="frames-used" class="font-semibold text-green-400">0 / 64</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Memory Free:</span>
+                            <span id="memory-free" class="font-semibold text-yellow-400">256 KB</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Utilization:</span>
+                            <span id="memory-utilization" class="font-semibold text-purple-400">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Memory Visualization (Center - Large) -->
+        <section class="lg:col-span-6">
+            <div class="glass rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-memory text-green-300"></i>
+                        Memory Frames (8x8)
+                    </h3>
+                    <div class="text-xs text-green-200">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Each frame = 4 KB
+                    </div>
+                </div>
+
+                <!-- Grid View (8x8 = 64 frames) -->
+                <div class="memory-grid-8 mb-6" id="memory-grid">
+                    <!-- 64 Grid cells will be inserted here by JavaScript -->
+                </div>
+
+                <!-- Fragmentation Info -->
+                <div id="fragmentation-info" class="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                    <!-- Info will be inserted here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Process Details (Right Sidebar) -->
+        <aside class="lg:col-span-3">
+            <div class="glass rounded-2xl p-6 sticky top-24">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fas fa-list text-cyan-300"></i>
+                    Detail Proses
+                </h3>
+
+                <!-- Process List Container -->
+                <div id="process-list" class="space-y-3 mb-6">
+                    <p class="text-white/50 text-sm text-center py-8">
+                        <i class="fas fa-inbox text-3xl mb-2 block"></i>
+                        Belum ada proses
+                    </p>
+                </div>
+
+                <!-- Page Table -->
+                <div class="border-t border-white/20 pt-6">
+                    <h4 class="text-sm font-semibold text-green-200 mb-3 flex items-center gap-2">
+                        <i class="fas fa-table"></i>
+                        Page Table
+                    </h4>
+                    <div class="overflow-auto max-h-64">
+                        <table id="page-table" class="w-full text-xs">
+                            <thead class="bg-white/5 sticky top-0">
+                            <tr class="text-green-200">
+                                <th class="py-2 px-2 text-left">Page</th>
+                                <th class="py-2 px-2 text-left">Frame</th>
+                                <th class="py-2 px-2 text-left">Status</th>
+                            </tr>
+                            </thead>
+                            <tbody class="text-white/70">
+                            <!-- Table rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Legend Section -->
+    <div class="mt-8 glass rounded-2xl p-6">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-palette"></i>
+            Legend
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-gray-600 rounded border border-white/20"></div>
+                <span class="text-white text-sm">Free Frame</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-blue-500 rounded"></div>
+                <span class="text-white text-sm">Process P1</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-green-500 rounded"></div>
+                <span class="text-white text-sm">Process P2</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-red-500 rounded"></div>
+                <span class="text-white text-sm">Process P3</span>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="mt-12 py-6 px-6 border-t border-white/10">
+    <div class="max-w-7xl mx-auto text-center text-white/50 text-sm">
+        <p>Memory Management Simulator © 2025</p>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script src="js/noncontiguous.js"></script>
+
+</body>
 </html>

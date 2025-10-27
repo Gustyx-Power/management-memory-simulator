@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Management Simulator | UTS Sistem Operasi</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3498db',
+                        secondary: '#2ecc71',
+                        danger: '#e74c3c',
+                        warning: '#f1c40f',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Custom animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen overflow-x-hidden">
+
+<!-- Hero Section / Landing -->
+<section id="landing" class="min-h-screen flex items-center justify-center relative">
+    <!-- Animated background elements -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="top: 10%; left: 10%;"></div>
+        <div class="absolute w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="top: 60%; right: 10%; animation-delay: 2s;"></div>
+        <div class="absolute w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="bottom: 10%; left: 50%; animation-delay: 4s;"></div>
+    </div>
+
+    <div class="relative z-10 text-center px-6 max-w-6xl mx-auto">
+        <!-- Logo/Icon -->
+        <div class="mb-8 animate-fade-in-up">
+            <div class="inline-block p-6 glass rounded-3xl">
+                <svg class="w-20 h-20 text-purple-300" viewBox="0 0 100 100" fill="currentColor">
+                    <!-- Memory hierarchy pyramid -->
+                    <rect x="40" y="10" width="20" height="8" rx="2"/>
+                    <rect x="30" y="22" width="40" height="12" rx="2"/>
+                    <rect x="20" y="38" width="60" height="18" rx="2"/>
+                    <rect x="10" y="60" width="80" height="30" rx="2"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-4 animate-fade-in-up" style="animation-delay: 0.2s;">
+            Memory Management <span class="gradient-text">Simulator</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-xl md:text-2xl text-purple-200 mb-8 animate-fade-in-up" style="animation-delay: 0.4s;">
+            Visualisasi Interaktif Manajemen Memori Sistem Operasi
+        </p>
+
+        <!-- Feature badges -->
+        <div class="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in-up" style="animation-delay: 0.6s;">
+            <div class="glass px-4 py-2 rounded-full text-white flex items-center gap-2">
+                <i class="fas fa-memory text-purple-300"></i>
+                <span class="text-sm">4 Hierarki Memori</span>
+            </div>
+            <div class="glass px-4 py-2 rounded-full text-white flex items-center gap-2">
+                <i class="fas fa-layer-group text-blue-300"></i>
+                <span class="text-sm">Contiguous & Non-Contiguous</span>
+            </div>
+            <div class="glass px-4 py-2 rounded-full text-white flex items-center gap-2">
+                <i class="fas fa-chart-line text-green-300"></i>
+                <span class="text-sm">Real-time Analytics</span>
+            </div>
+        </div>
+
+        <!-- CTA Button -->
+        <button onclick="scrollToDashboard()" class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg font-semibold rounded-full hover:scale-105 transform transition shadow-2xl animate-fade-in-up" style="animation-delay: 0.8s;">
+            <i class="fas fa-rocket mr-2"></i>
+            Mulai Simulasi
+        </button>
+
+        <!-- Course Info -->
+        <div class="mt-16 glass rounded-xl p-6 text-white/70 text-sm inline-block animate-fade-in-up" style="animation-delay: 1s;">
+            <p class="mb-2 font-semibold text-white">Ujian Tengah Semester - Sistem Operasi</p>
+            <p>Kelompok: [Nama Kelompok] | Kelas: [Kelas]</p>
+            <p>Dosen: [Nama Dosen] | 27 Oktober 2025</p>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <i class="fas fa-chevron-down text-white/50 text-2xl"></i>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboard / Menu Section -->
+<section id="dashboard" class="min-h-screen py-20 px-6 relative">
+    <div class="max-w-7xl mx-auto">
+        <!-- Section Title -->
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                Pilih Simulasi
+            </h2>
+            <p class="text-purple-200 text-lg">
+                Eksplorasi berbagai konsep manajemen memori sistem operasi
+            </p>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <!-- Card 1: Memory Hierarchy -->
+            <div class="glass rounded-2xl p-8 card-hover cursor-pointer" onclick="alert('Fitur Hierarki Memori akan segera dibuat!')">
+                <div class="mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="fas fa-layer-group text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">
+                        Hierarki Memori
+                    </h3>
+                    <p class="text-purple-200 text-sm mb-4">
+                        4 Tingkat: Register → Cache → RAM → Storage
+                    </p>
+                </div>
+
+                <ul class="text-white/70 text-sm space-y-2 mb-6">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>Visualisasi transfer data antar level</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>Cache hit/miss simulation</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>Access time comparison</span>
+                    </li>
+                </ul>
+
+                <button class="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition font-semibold">
+                    Segera Hadir
+                </button>
+            </div>
+
+            <!-- Card 2: Contiguous Allocation -->
+            <div class="glass rounded-2xl p-8 card-hover cursor-pointer" onclick="window.location.href='contiguous.html'">
+                <div class="mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="fas fa-square text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">
+                        Contiguous Allocation
+                    </h3>
+                    <p class="text-purple-200 text-sm mb-4">
+                        Alokasi memori dalam blok berurutan
+                    </p>
+                </div>
+
+                <ul class="text-white/70 text-sm space-y-2 mb-6">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>Fixed & Dynamic Partitioning</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>First-Fit Algorithm</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>External Fragmentation</span>
+                    </li>
+                </ul>
+
+                <button class="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg transition font-semibold">
+                    <i class="fas fa-play mr-2"></i>
+                    Mulai Simulasi
+                </button>
+            </div>
+
+            <!-- Card 3: Non-Contiguous Allocation -->
+            <div class="glass rounded-2xl p-8 card-hover cursor-pointer" onclick="window.location.href='noncontiguous.html'">
+                <div class="mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="fas fa-th text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">
+                        Non-Contiguous Allocation
+                    </h3>
+                    <p class="text-purple-200 text-sm mb-4">
+                        Alokasi memori tersebar (Paging)
+                    </p>
+                </div>
+
+                <ul class="text-white/70 text-sm space-y-2 mb-6">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>Paging Mechanism</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>Page Table Visualization</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>Logical to Physical Address</span>
+                    </li>
+                </ul>
+
+                <button class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition font-semibold">
+                    <i class="fas fa-play mr-2"></i>
+                    Mulai Simulasi
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-20 grid md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-bolt text-purple-300 text-xl"></i>
+                </div>
+                <h4 class="text-white font-semibold mb-2">Real-time Simulation</h4>
+                <p class="text-purple-200 text-sm">Visualisasi interaktif dengan feedback langsung</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-graduation-cap text-blue-300 text-xl"></i>
+                </div>
+                <h4 class="text-white font-semibold mb-2">Educational</h4>
+                <p class="text-purple-200 text-sm">Dirancang untuk pembelajaran konsep OS</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-laptop-code text-green-300 text-xl"></i>
+                </div>
+                <h4 class="text-white font-semibold mb-2">Interactive</h4>
+                <p class="text-purple-200 text-sm">Kontrol penuh untuk eksplorasi berbagai skenario</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-8 px-6 border-t border-white/10">
+    <div class="max-w-7xl mx-auto text-center text-white/50 text-sm">
+        <p class="mb-2">© 2025 Memory Management Simulator</p>
+        <p>Dibuat dengan <i class="fas fa-heart text-red-400"></i> untuk Ujian Tengah Semester - Sistem Operasi</p>
+        <p class="mt-4 text-white/30 text-xs">Powered by Tailwind CSS & Vanilla JavaScript</p>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+    // Smooth scroll to dashboard
+    function scrollToDashboard() {
+        document.getElementById('dashboard').scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+
+    // Fade in animations on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe all cards
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.card-hover');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = `all 0.6s ease ${index * 0.1}s`;
+            observer.observe(card);
+        });
+    });
+</script>
+
+</body>
+</html>

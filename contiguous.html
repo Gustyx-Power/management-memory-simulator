@@ -3,47 +3,432 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulasi Memori Contiguous</title>
-    <link rel="stylesheet" href="style.css"> 
+    <title>Contiguous Memory Allocation | Memory Management Simulator</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3498db',
+                        secondary: '#2ecc71',
+                        danger: '#e74c3c',
+                        warning: '#f1c40f',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Memory block styles */
+        .memory-block {
+            transition: all 0.3s ease;
+        }
+
+        .memory-block:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Grid cell styles - 8x8 grid */
+        .grid-cell {
+            aspect-ratio: 1;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .grid-cell::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .grid-cell:hover::after {
+            opacity: 1;
+        }
+
+        /* 8 columns grid */
+        .memory-grid-8 {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+        }
+    </style>
 </head>
-<body>
-    <h1>Simulasi Manajemen Memori: Contiguous (First-Fit)</h1>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen">
 
-    <div id="custom-notification" style="display: none;">
-      <p id="notification-message"></p>
-      <button onclick="hideNotification()">OK</button>
-    </div>
-    
-    <div style="text-align: center; margin-bottom: 20px;">
-        <a href="noncontiguous.html" style="padding: 10px 20px; background-color: #f39c12; color: white; text-decoration: none; border-radius: 5px;">
-            ⬅️ Beralih ke Simulasi Paging (Non-Contiguous)
-        </a>
-    </div>
+<!-- Navbar -->
+<nav class="bg-gradient-to-r from-slate-800 to-blue-900 text-white shadow-2xl sticky top-0 z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <!-- Back Button -->
+            <a href="index.html" class="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-white/20 transition group">
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
 
-    <div id="container">
-        <section id="control-panel">
-            <h2>⚙️ Kontrol Simulasi</h2>
-            <div id="process-input">
-                <label for="process-size">Ukuran Proses (KB):</label>
-                <input type="number" id="process-size" min="1" value="20">
-                <button onclick="addProcess()">Tambah Proses Baru</button>
+            <!-- Title -->
+            <div class="text-center">
+                <h1 class="text-xl font-bold bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent">
+                    Contiguous Memory Allocation
+                </h1>
+                <p class="text-xs text-blue-200">First-Fit Algorithm</p>
             </div>
-            
-            </section>
 
-        <section id="memory-visualization">
-            <h2>💾 Memori Fisik (1024KB Partisi Statis)</h2>
-            <div id="memory-list">
-                </div>
-            <p id="fragmentation-info"></p>
-        </section>
+            <!-- Switch Button -->
+            <a href="noncontiguous.html" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg hover:from-green-600 hover:to-emerald-600 transition group">
+                <span class="font-medium text-sm">Non-Contiguous</span>
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition"></i>
+            </a>
+        </div>
+    </div>
+</nav>
 
-        <section id="detail-info">
-            <h2>📋 Detail Proses</h2>
-            <div id="process-list">
+<!-- Custom Notification Modal -->
+<div id="custom-notification" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+        <div class="flex items-start gap-4 mb-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-500 text-xl"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Notifikasi</h3>
+                <p id="notification-message" class="text-gray-600"></p>
+            </div>
+        </div>
+        <button onclick="hideNotification()" class="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-cyan-600 transition">
+            <i class="fas fa-check mr-2"></i>OK
+        </button>
+    </div>
+</div>
+
+<!-- Auto Test Modal -->
+<div id="auto-test-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-blue-900 rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-scale-in border border-white/20">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-flask text-white text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Test Otomatis</h3>
+            <p class="text-blue-200 text-sm">Pilih scenario yang ingin Anda test</p>
+        </div>
+
+        <div class="space-y-3 mb-6">
+            <!-- No Fragmentation -->
+            <button onclick="runAutoTest('no-frag')" class="w-full p-5 glass rounded-xl hover:bg-white/20 transition text-left group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/30 transition">
+                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold mb-1">No Fragmentation</h4>
+                        <p class="text-blue-200 text-xs">Memory tanpa fragmentasi - optimal allocation</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-white/50 group-hover:text-white group-hover:translate-x-1 transition"></i>
                 </div>
-        </section>
+            </button>
+
+            <!-- With Fragmentation -->
+            <button onclick="runAutoTest('with-frag')" class="w-full p-5 glass rounded-xl hover:bg-white/20 transition text-left group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-500/30 transition">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold mb-1">With Fragmentation</h4>
+                        <p class="text-blue-200 text-xs">Memory dengan fragmentasi eksternal - wasted space</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-white/50 group-hover:text-white group-hover:translate-x-1 transition"></i>
+                </div>
+            </button>
+        </div>
+
+        <button onclick="closeAutoTestModal()" class="w-full py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition">
+            <i class="fas fa-times mr-2"></i>Batal
+        </button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Header Info -->
+    <div class="glass rounded-2xl p-6 mb-8 text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-square text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold">Simulasi Contiguous Allocation</h2>
+                    <p class="text-blue-200 text-sm">Alokasi memori dalam blok berurutan (1024 KB Total Memory)</p>
+                </div>
+            </div>
+            <!-- Auto Test Button -->
+            <button onclick="openAutoTestModal()" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 transition shadow-lg flex items-center gap-2">
+                <i class="fas fa-flask"></i>
+                <span>Test Otomatis</span>
+            </button>
+        </div>
+
+        <!-- Info badges -->
+        <div class="flex flex-wrap gap-3">
+            <div class="px-4 py-2 bg-white/10 rounded-lg text-sm flex items-center gap-2">
+                <i class="fas fa-microchip text-blue-300"></i>
+                <span>Total: 1024 KB</span>
+            </div>
+            <div class="px-4 py-2 bg-white/10 rounded-lg text-sm flex items-center gap-2">
+                <i class="fas fa-ruler text-green-300"></i>
+                <span>Block Size: 16 KB</span>
+            </div>
+            <div class="px-4 py-2 bg-white/10 rounded-lg text-sm flex items-center gap-2">
+                <i class="fas fa-puzzle-piece text-yellow-300"></i>
+                <span>Algorithm: First-Fit</span>
+            </div>
+        </div>
     </div>
 
-    <script src="js/contiguous.js"></script> </body>
+    <!-- Grid Layout -->
+    <div class="grid lg:grid-cols-12 gap-8">
+
+        <!-- Control Panel (Left Sidebar) -->
+        <aside class="lg:col-span-3">
+            <div class="glass rounded-2xl p-6 sticky top-24 space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <i class="fas fa-cog text-blue-300"></i>
+                        Kontrol Simulasi
+                    </h3>
+
+                    <!-- Process Input Form -->
+                    <div class="space-y-4">
+                        <div>
+                            <label for="process-size" class="block text-sm font-medium text-blue-200 mb-2">
+                                <i class="fas fa-memory mr-1"></i>
+                                Ukuran Proses (KB)
+                            </label>
+                            <input
+                                    type="number"
+                                    id="process-size"
+                                    min="1"
+                                    value="100"
+                                    class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+                                    placeholder="Masukkan ukuran..."
+                            >
+                        </div>
+
+                        <button
+                                onclick="addProcess()"
+                                class="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition shadow-lg hover:shadow-blue-500/50 flex items-center justify-center gap-2"
+                        >
+                            <i class="fas fa-plus-circle"></i>
+                            Tambah Proses
+                        </button>
+
+                        <button
+                                onclick="resetMemory()"
+                                class="w-full py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition flex items-center justify-center gap-2"
+                        >
+                            <i class="fas fa-redo"></i>
+                            Reset Memory
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="pt-6 border-t border-white/20">
+                    <h4 class="text-sm font-semibold text-blue-200 mb-3">Quick Stats</h4>
+                    <div class="space-y-2 text-sm text-white/70">
+                        <div class="flex justify-between">
+                            <span>Total Proses:</span>
+                            <span id="total-processes" class="font-semibold text-white">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Memory Used:</span>
+                            <span id="memory-used" class="font-semibold text-green-400">0 KB</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Memory Free:</span>
+                            <span id="memory-free" class="font-semibold text-yellow-400">1024 KB</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Utilization:</span>
+                            <span id="memory-utilization" class="font-semibold text-purple-400">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Memory Visualization (Center - Large) -->
+        <section class="lg:col-span-6">
+            <div class="glass rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-memory text-blue-300"></i>
+                        Memory Grid (8x8)
+                    </h3>
+                    <div class="text-xs text-blue-200">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Each cell = 16 KB
+                    </div>
+                </div>
+
+                <!-- Grid View (8x8 = 64 cells) -->
+                <div class="memory-grid-8 mb-6" id="memory-grid">
+                    <!-- 64 Grid cells will be inserted here by JavaScript -->
+                </div>
+
+                <!-- Fragmentation Info -->
+                <div id="fragmentation-info" class="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                    <!-- Fragmentation info will be inserted here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Process Details (Right Sidebar) -->
+        <aside class="lg:col-span-3">
+            <div class="glass rounded-2xl p-6 sticky top-24">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fas fa-list text-green-300"></i>
+                    Detail Proses
+                </h3>
+
+                <!-- Process List Container -->
+                <div id="process-list" class="space-y-3">
+                    <p class="text-white/50 text-sm text-center py-8">
+                        <i class="fas fa-inbox text-3xl mb-2 block"></i>
+                        Belum ada proses
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Legend Section -->
+    <div class="mt-8 glass rounded-2xl p-6">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-palette"></i>
+            Legend
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-gray-600 rounded border border-white/20"></div>
+                <span class="text-white text-sm">Free Memory</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-blue-500 rounded"></div>
+                <span class="text-white text-sm">Process P1</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-green-500 rounded"></div>
+                <span class="text-white text-sm">Process P2</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                <div class="w-8 h-8 bg-red-500 rounded"></div>
+                <span class="text-white text-sm">Process P3</span>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="mt-12 py-6 px-6 border-t border-white/10">
+    <div class="max-w-7xl mx-auto text-center text-white/50 text-sm">
+        <p>Memory Management Simulator © 2025</p>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script src="js/contiguous.js"></script>
+
+</body>
 </html>

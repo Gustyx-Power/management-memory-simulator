@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cara Kerja Memory Management | Penjelasan Sederhana</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes flowRight {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .animate-flow-right {
+            animation: flowRight 2s ease-in-out infinite;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .step-box {
+            transition: all 0.3s ease;
+        }
+
+        .step-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen">
+
+<!-- Navbar -->
+<nav class="bg-gradient-to-r from-slate-800 to-purple-900 text-white shadow-2xl sticky top-0 z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-white/20 transition group">
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+
+            <div class="text-center">
+                <h1 class="text-xl font-bold bg-gradient-to-r from-orange-300 to-red-300 bg-clip-text text-transparent">
+                    Cara Kerja Memory Management
+                </h1>
+                <p class="text-xs text-purple-200">Penjelasan Sederhana untuk Pemula</p>
+            </div>
+
+            <div class="w-32"></div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-6 py-12">
+
+    <!-- Hero Section -->
+    <div class="text-center mb-16">
+        <div class="inline-block mb-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center animate-float">
+                <i class="fas fa-lightbulb text-white text-4xl"></i>
+            </div>
+        </div>
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+            Apa Itu Memory Management?
+        </h2>
+        <p class="text-xl text-purple-200 max-w-3xl mx-auto">
+            Memory Management adalah cara komputer mengatur dan mengelola "ruang penyimpanan sementara"
+            agar semua program bisa berjalan dengan lancar dan efisien.
+        </p>
+    </div>
+
+    <!-- Analogi Perpustakaan -->
+    <div class="glass rounded-3xl p-8 md:p-12 mb-16">
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-book text-white text-2xl"></i>
+            </div>
+            <div>
+                <h3 class="text-3xl font-bold text-white">Analogi Sederhana: Perpustakaan</h3>
+                <p class="text-purple-200">Bayangkan komputer sebagai perpustakaan besar</p>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Perpustakaan -->
+            <div class="bg-white/5 rounded-2xl p-6 border-2 border-blue-500/50">
+                <div class="text-6xl text-center mb-4">🏛️</div>
+                <h4 class="text-xl font-bold text-white mb-4 text-center">Perpustakaan</h4>
+                <ul class="space-y-3 text-white/80">
+                    <li class="flex items-start gap-3">
+                        <span class="text-2xl">📚</span>
+                        <div>
+                            <strong class="text-white">Buku di Rak</strong>
+                            <p class="text-sm">= Data di Hard Disk (banyak tapi lambat diambil)</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-2xl">📋</span>
+                        <div>
+                            <strong class="text-white">Buku di Meja Baca</strong>
+                            <p class="text-sm">= Data di RAM (cepat diakses, terbatas)</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-2xl">✏️</span>
+                        <div>
+                            <strong class="text-white">Buku yang Sedang Dibaca</strong>
+                            <p class="text-sm">= Data di Register CPU (paling cepat!)</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Komputer -->
+            <div class="bg-white/5 rounded-2xl p-6 border-2 border-green-500/50">
+                <div class="text-6xl text-center mb-4">💻</div>
+                <h4 class="text-xl font-bold text-white mb-4 text-center">Komputer</h4>
+                <ul class="space-y-3 text-white/80">
+                    <li class="flex items-start gap-3">
+                        <span class="text-2xl">💿</span>
+                        <div>
+                            <strong class="text-white">Hard Disk / SSD</strong>
+                            <p class="text-sm">Besar (TB) tapi lambat (10 ms)</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-2xl">🎯</span>
+                        <div>
+                            <strong class="text-white">RAM (Memory)</strong>
+                            <p class="text-sm">Sedang (GB) dan cepat (100 ns)</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-2xl">⚡</span>
+                        <div>
+                            <strong class="text-white">Register CPU</strong>
+                            <p class="text-sm">Kecil (bytes) tapi super cepat (&lt;1 ns)</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-8 p-6 bg-blue-500/20 rounded-2xl border border-blue-500/50">
+            <p class="text-white text-center text-lg">
+                💡 <strong>Kesimpulan:</strong> Seperti perpustakaan, komputer perlu mengatur
+                "buku mana di meja, buku mana di rak" agar kerja cepat dan efisien!
+            </p>
+        </div>
+    </div>
+
+    <!-- Diagram Komputer -->
+    <div class="glass rounded-3xl p-8 md:p-12 mb-16">
+        <h3 class="text-3xl font-bold text-white mb-8 text-center">
+            <i class="fas fa-desktop text-purple-400 mr-3"></i>
+            Diagram Komputer & Memory System
+        </h3>
+
+        <div class="relative max-w-4xl mx-auto">
+            <!-- CPU -->
+            <div class="mb-8">
+                <div class="glass rounded-2xl p-6 border-4 border-purple-500">
+                    <div class="text-center">
+                        <div class="text-6xl mb-3">🧠</div>
+                        <h4 class="text-2xl font-bold text-white mb-2">CPU (Processor)</h4>
+                        <p class="text-purple-200 text-sm">Otak komputer yang mengolah data</p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mt-6">
+                        <!-- Register -->
+                        <div class="bg-purple-500/30 rounded-xl p-4 text-center border-2 border-purple-400">
+                            <div class="text-3xl mb-2">⚡</div>
+                            <h5 class="font-bold text-white text-sm">Register</h5>
+                            <p class="text-xs text-purple-200 mt-1">Super Cepat</p>
+                            <p class="text-xs text-white font-bold mt-1">&lt; 1 ns</p>
+                        </div>
+
+                        <!-- Cache L1 -->
+                        <div class="bg-blue-500/30 rounded-xl p-4 text-center border-2 border-blue-400">
+                            <div class="text-3xl mb-2">💨</div>
+                            <h5 class="font-bold text-white text-sm">Cache L1</h5>
+                            <p class="text-xs text-blue-200 mt-1">Sangat Cepat</p>
+                            <p class="text-xs text-white font-bold mt-1">~1 ns</p>
+                        </div>
+
+                        <!-- Cache L2 -->
+                        <div class="bg-cyan-500/30 rounded-xl p-4 text-center border-2 border-cyan-400">
+                            <div class="text-3xl mb-2">🌬️</div>
+                            <h5 class="font-bold text-white text-sm">Cache L2</h5>
+                            <p class="text-xs text-cyan-200 mt-1">Cepat</p>
+                            <p class="text-xs text-white font-bold mt-1">~3 ns</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arrow Down -->
+            <div class="flex justify-center mb-8">
+                <div class="text-center">
+                    <div class="text-4xl text-purple-400 animate-bounce">⬇️</div>
+                    <p class="text-white/70 text-sm mt-2">Transfer Data</p>
+                </div>
+            </div>
+
+            <!-- RAM -->
+            <div class="glass rounded-2xl p-6 border-4 border-green-500 mb-8">
+                <div class="text-center">
+                    <div class="text-6xl mb-3">🎯</div>
+                    <h4 class="text-2xl font-bold text-white mb-2">RAM (Random Access Memory)</h4>
+                    <p class="text-green-200 text-sm mb-4">Memory utama untuk program yang berjalan</p>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-green-500/20 rounded-lg p-3">
+                            <p class="text-white/70">Kecepatan:</p>
+                            <p class="text-white font-bold text-lg">~100 ns</p>
+                        </div>
+                        <div class="bg-green-500/20 rounded-lg p-3">
+                            <p class="text-white/70">Kapasitas:</p>
+                            <p class="text-white font-bold text-lg">8-16 GB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arrow Down -->
+            <div class="flex justify-center mb-8">
+                <div class="text-center">
+                    <div class="text-4xl text-green-400 animate-bounce" style="animation-delay: 0.5s">⬇️</div>
+                    <p class="text-white/70 text-sm mt-2">Transfer Data</p>
+                </div>
+            </div>
+
+            <!-- Disk -->
+            <div class="glass rounded-2xl p-6 border-4 border-yellow-500">
+                <div class="text-center">
+                    <div class="text-6xl mb-3">💿</div>
+                    <h4 class="text-2xl font-bold text-white mb-2">Hard Disk / SSD</h4>
+                    <p class="text-yellow-200 text-sm mb-4">Penyimpanan permanen data</p>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-yellow-500/20 rounded-lg p-3">
+                            <p class="text-white/70">Kecepatan:</p>
+                            <p class="text-white font-bold text-lg">~10 ms</p>
+                            <p class="text-yellow-300 text-xs">(100,000× lebih lambat!)</p>
+                        </div>
+                        <div class="bg-yellow-500/20 rounded-lg p-3">
+                            <p class="text-white/70">Kapasitas:</p>
+                            <p class="text-white font-bold text-lg">512 GB - 2 TB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proses Langkah-Langkah -->
+    <div class="glass rounded-3xl p-8 md:p-12 mb-16">
+        <h3 class="text-3xl font-bold text-white mb-8 text-center">
+            <i class="fas fa-tasks text-orange-400 mr-3"></i>
+            Bagaimana Data Diakses? (Step-by-Step)
+        </h3>
+
+        <div class="space-y-6">
+            <!-- Step 1 -->
+            <div class="step-box bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-6 border-l-4 border-purple-500">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xl">
+                        1
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold text-white mb-2">📱 Program Diminta Berjalan</h4>
+                        <p class="text-white/80 mb-3">
+                            User klik aplikasi (misal: Chrome, Word, Game)
+                        </p>
+                        <div class="bg-white/10 rounded-lg p-3 text-sm text-white/70">
+                            💬 <strong>Penjelasan:</strong> Operating System (Windows/Linux) menerima permintaan untuk menjalankan program.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-box bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-6 border-l-4 border-yellow-500">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xl">
+                        2
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold text-white mb-2">💿 Data Dimuat dari Disk</h4>
+                        <p class="text-white/80 mb-3">
+                            OS membaca file program dari Hard Disk/SSD (lambat ~10 ms)
+                        </p>
+                        <div class="bg-white/10 rounded-lg p-3 text-sm text-white/70">
+                            💬 <strong>Penjelasan:</strong> Disk menyimpan semua file permanently, tapi akses nya SANGAT lambat.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-box bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-6 border-l-4 border-green-500">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xl">
+                        3
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold text-white mb-2">🎯 Data Di-copy ke RAM</h4>
+                        <p class="text-white/80 mb-3">
+                            Program dan data dimuat ke RAM agar CPU bisa akses dengan cepat (~100 ns)
+                        </p>
+                        <div class="bg-white/10 rounded-lg p-3 text-sm text-white/70">
+                            💬 <strong>Penjelasan:</strong> RAM adalah "meja kerja" CPU. Data yang ada di RAM 100,000× lebih cepat diakses daripada Disk!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step-box bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl p-6 border-l-4 border-blue-500">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xl">
+                        4
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold text-white mb-2">💨 Cache Menyimpan Data "Hot"</h4>
+                        <p class="text-white/80 mb-3">
+                            Data yang sering dipakai di-copy ke Cache (super cepat ~1 ns)
+                        </p>
+                        <div class="bg-white/10 rounded-lg p-3 text-sm text-white/70">
+                            💬 <strong>Penjelasan:</strong> Cache seperti "sticky notes" di meja. Kecil tapi data yang sering dipakai ada di sini.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step-box bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-2xl p-6 border-l-4 border-purple-500">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xl">
+                        5
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold text-white mb-2">⚡ CPU Memproses di Register</h4>
+                        <p class="text-white/80 mb-3">
+                            Data yang SEDANG diproses ada di Register CPU (paling cepat &lt;1 ns)
+                        </p>
+                        <div class="bg-white/10 rounded-lg p-3 text-sm text-white/70">
+                            💬 <strong>Penjelasan:</strong> Register adalah "tangan" CPU. Data yang sedang dihitung ada di sini.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="mt-8 p-6 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl border-2 border-orange-500">
+            <h4 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-lightbulb text-orange-400"></i>
+                Kesimpulan Alur:
+            </h4>
+            <p class="text-white text-lg text-center">
+                Disk 💿 → RAM 🎯 → Cache 💨 → Register ⚡ → <strong class="text-orange-300">CPU memproses data!</strong>
+            </p>
+            <p class="text-white/70 text-sm text-center mt-3">
+                Semakin dekat ke CPU = Semakin cepat akses = Semakin kecil kapasitas
+            </p>
+        </div>
+    </div>
+
+    <!-- Perbandingan Kecepatan -->
+    <div class="glass rounded-3xl p-8 md:p-12 mb-16">
+        <h3 class="text-3xl font-bold text-white mb-8 text-center">
+            <i class="fas fa-tachometer-alt text-red-400 mr-3"></i>
+            Perbandingan Kecepatan (Analogi Waktu)
+        </h3>
+
+        <p class="text-center text-white/80 mb-8">
+            Bayangkan akses Register = <strong class="text-white">1 detik</strong>, maka:
+        </p>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-purple-500/20 rounded-2xl p-6 border-2 border-purple-500 text-center">
+                <div class="text-4xl mb-3">⚡</div>
+                <h4 class="font-bold text-white text-lg mb-2">Register</h4>
+                <p class="text-6xl font-bold text-white mb-2">1s</p>
+                <p class="text-purple-300 text-sm">Paling cepat!</p>
+            </div>
+
+            <div class="bg-blue-500/20 rounded-2xl p-6 border-2 border-blue-500 text-center">
+                <div class="text-4xl mb-3">💨</div>
+                <h4 class="font-bold text-white text-lg mb-2">Cache</h4>
+                <p class="text-5xl font-bold text-white mb-2">2s</p>
+                <p class="text-blue-300 text-sm">2× lebih lambat</p>
+            </div>
+
+            <div class="bg-green-500/20 rounded-2xl p-6 border-2 border-green-500 text-center">
+                <div class="text-4xl mb-3">🎯</div>
+                <h4 class="font-bold text-white text-lg mb-2">RAM</h4>
+                <p class="text-4xl font-bold text-white mb-2">3 menit</p>
+                <p class="text-green-300 text-sm">100× lebih lambat</p>
+            </div>
+
+            <div class="bg-yellow-500/20 rounded-2xl p-6 border-2 border-yellow-500 text-center">
+                <div class="text-4xl mb-3">💿</div>
+                <h4 class="font-bold text-white text-lg mb-2">Disk</h4>
+                <p class="text-3xl font-bold text-white mb-2">231 hari!</p>
+                <p class="text-yellow-300 text-sm">100,000× lebih lambat! 🐌</p>
+            </div>
+        </div>
+
+        <div class="mt-8 p-6 bg-red-500/20 rounded-2xl border border-red-500">
+            <p class="text-white text-center">
+                <i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>
+                <strong>Kesimpulan:</strong> Inilah mengapa Cache dan RAM sangat penting!
+                Tanpa mereka, komputer akan super lambat menunggu data dari Disk.
+            </p>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="text-center">
+        <h3 class="text-3xl font-bold text-white mb-6">Siap Mencoba Simulatornya?</h3>
+        <p class="text-xl text-purple-200 mb-8">
+            Sekarang kamu sudah paham konsepnya, coba langsung simulator interaktif!
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="hierarchy.html" class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg hover:scale-105 transition shadow-2xl">
+                <i class="fas fa-layer-group mr-2"></i>
+                Memory Hierarchy
+            </a>
+            <a href="contiguous.html" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-lg hover:scale-105 transition shadow-2xl">
+                <i class="fas fa-square mr-2"></i>
+                Contiguous Allocation
+            </a>
+            <a href="noncontiguous.html" class="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-lg hover:scale-105 transition shadow-2xl">
+                <i class="fas fa-th mr-2"></i>
+                Paging (Non-Contiguous)
+            </a>
+        </div>
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="mt-16 py-8 px-6 border-t border-white/10">
+    <div class="max-w-7xl mx-auto text-center text-white/50 text-sm">
+        <p>Memory Management Simulator © 2025</p>
+        <p class="mt-2 text-xs">Dibuat dengan untuk pembelajaran Sistem Operasi</p>
+    </div>
+</footer>
+
+</body>
+</html>

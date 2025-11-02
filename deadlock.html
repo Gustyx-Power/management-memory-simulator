@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadlock Simulator | Memory Management</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        .animate-scale-in { animation: scaleIn 0.3s ease-out; }
+        .animate-pulse-slow { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .animate-shake { animation: shake 0.5s ease-in-out; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .process-node {
+            transition: all 0.3s ease;
+        }
+
+        .process-node:hover {
+            transform: scale(1.1);
+        }
+
+        .resource-node {
+            transition: all 0.3s ease;
+        }
+
+        .resource-node:hover {
+            transform: scale(1.1);
+        }
+
+        .deadlock-detected {
+            animation: shake 0.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 min-h-screen">
+
+<!-- Navbar -->
+<nav class="bg-gradient-to-r from-slate-800 to-red-900 text-white shadow-2xl sticky top-0 z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-white/20 transition group">
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+
+            <div class="text-center">
+                <h1 class="text-xl font-bold bg-gradient-to-r from-red-300 to-pink-300 bg-clip-text text-transparent">
+                    Deadlock Detection Simulator
+                </h1>
+                <p class="text-xs text-red-200">Resource Allocation Graph & Circular Wait</p>
+            </div>
+
+            <button onclick="openInfoModal()" class="px-4 py-2 glass rounded-lg hover:bg-white/20 transition">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Info Modal -->
+<div id="info-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-red-900 rounded-2xl shadow-2xl max-w-2xl w-full p-8 animate-scale-in border border-white/20">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-white">Tentang Deadlock</h3>
+            <button onclick="closeInfoModal()" class="text-white/50 hover:text-white transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="text-white/80 space-y-4">
+            <p><strong>Deadlock</strong> adalah kondisi di mana 2 atau lebih proses saling menunggu resource yang sedang dipegang oleh proses lain, sehingga tidak ada yang bisa melanjutkan eksekusi.</p>
+
+            <div class="bg-white/5 rounded-lg p-4">
+                <h4 class="font-bold text-red-300 mb-2">4 Kondisi Deadlock (Coffman Conditions):</h4>
+                <ol class="list-decimal list-inside space-y-1 text-sm">
+                    <li><strong>Mutual Exclusion:</strong> Resource hanya bisa digunakan 1 proses saja</li>
+                    <li><strong>Hold and Wait:</strong> Proses memegang resource sambil menunggu resource lain</li>
+                    <li><strong>No Preemption:</strong> Resource tidak bisa dipaksa diambil</li>
+                    <li><strong>Circular Wait:</strong> Ada cycle dalam waiting chain</li>
+                </ol>
+            </div>
+        </div>
+        <button onclick="closeInfoModal()" class="w-full mt-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg font-semibold hover:from-red-600 hover:to-pink-600 transition">
+            Mengerti
+        </button>
+    </div>
+</div>
+
+<!-- Notification Modal -->
+<div id="custom-notification" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+        <div class="flex items-start gap-4 mb-4">
+            <div id="notification-icon" class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-info-circle text-red-500 text-xl"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Notifikasi</h3>
+                <p id="notification-message" class="text-gray-600"></p>
+            </div>
+        </div>
+        <button onclick="hideNotification()" class="w-full py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg font-semibold hover:from-red-600 hover:to-pink-600 transition">
+            <i class="fas fa-check mr-2"></i>OK
+        </button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Header -->
+    <div class="glass rounded-2xl p-6 mb-8 text-white">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-lock text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold">Simulasi Deadlock Detection</h2>
+                    <p class="text-red-200 text-sm">Resource Allocation Graph & Banker's Algorithm</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid Layout -->
+    <div class="grid lg:grid-cols-12 gap-8">
+
+        <!-- Control Panel -->
+        <aside class="lg:col-span-4">
+            <div class="glass rounded-2xl p-6 sticky top-24 space-y-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-cog text-red-300"></i>
+                    Kontrol Simulasi
+                </h3>
+
+                <!-- Scenario Selector -->
+                <div>
+                    <label class="block text-sm font-medium text-red-200 mb-2">
+                        <i class="fas fa-clipboard-list mr-1"></i>
+                        Pilih Scenario
+                    </label>
+                    <select id="scenario" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
+                        <option value="no-deadlock">No Deadlock (Safe State)</option>
+                        <option value="simple-deadlock">Simple Deadlock (2 Proses)</option>
+                        <option value="circular-deadlock">Circular Deadlock (3 Proses)</option>
+                        <option value="complex-deadlock">Complex Deadlock (4 Proses)</option>
+                    </select>
+                </div>
+
+                <button onclick="runScenario()" class="w-full py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold rounded-lg hover:from-red-600 hover:to-pink-600 transition shadow-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-play-circle"></i>
+                    Run Scenario
+                </button>
+
+                <button onclick="resetSimulation()" class="w-full py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-redo"></i>
+                    Reset
+                </button>
+
+                <!-- Stats -->
+                <div class="pt-6 border-t border-white/20">
+                    <h4 class="text-sm font-semibold text-red-200 mb-3">Status</h4>
+                    <div class="space-y-2 text-sm text-white/70">
+                        <div class="flex justify-between">
+                            <span>Total Processes:</span>
+                            <span id="total-processes" class="font-semibold text-white">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Total Resources:</span>
+                            <span id="total-resources" class="font-semibold text-white">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Deadlock Status:</span>
+                            <span id="deadlock-status" class="font-semibold text-green-400">Safe</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Visualization -->
+        <section class="lg:col-span-8">
+            <div class="glass rounded-2xl p-6">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fas fa-project-diagram text-red-300"></i>
+                    Resource Allocation Graph
+                </h3>
+
+                <!-- Graph Canvas -->
+                <div id="graph-canvas" class="bg-white/5 rounded-xl p-8 min-h-[500px] border-2 border-white/10 relative">
+                    <p class="text-white/50 text-center py-20">
+                        <i class="fas fa-play-circle text-6xl mb-4 block"></i>
+                        Pilih scenario dan klik "Run Scenario" untuk memulai simulasi
+                    </p>
+                </div>
+
+                <!-- Legend -->
+                <div class="mt-6 grid grid-cols-2 gap-4">
+                    <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                        <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-circle text-white"></i>
+                        </div>
+                        <div>
+                            <p class="text-white text-sm font-semibold">Process</p>
+                            <p class="text-white/50 text-xs">Proses yang berjalan</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                        <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-square text-white"></i>
+                        </div>
+                        <div>
+                            <p class="text-white text-sm font-semibold">Resource</p>
+                            <p class="text-white/50 text-xs">Resource yang tersedia</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full"></div>
+                            <i class="fas fa-arrow-right text-white"></i>
+                            <div class="w-8 h-8 bg-green-500 rounded"></div>
+                        </div>
+                        <div>
+                            <p class="text-white text-sm font-semibold">Request Edge</p>
+                            <p class="text-white/50 text-xs">Proses minta resource</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-green-500 rounded"></div>
+                            <i class="fas fa-arrow-right text-white"></i>
+                            <div class="w-8 h-8 bg-blue-500 rounded-full"></div>
+                        </div>
+                        <div>
+                            <p class="text-white text-sm font-semibold">Assignment Edge</p>
+                            <p class="text-white/50 text-xs">Resource assigned ke proses</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deadlock Info -->
+                <div id="deadlock-info" class="mt-6"></div>
+            </div>
+        </section>
+
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="mt-12 py-6 px-6 border-t border-white/10">
+    <div class="max-w-7xl mx-auto text-center text-white/50 text-sm">
+        <p>Deadlock Detection Simulator © 2025</p>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script src="js/deadlock.js"></script>
+
+</body>
+</html>
